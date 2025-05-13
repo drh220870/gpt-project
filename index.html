@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>پرسش و پاسخ با هوش مصنوعی</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(to left, #000000, #373737);
+            color: #333;
+            transition: background-color 0.3s, color 0.3s;
+        }
+            
+        .container {
+            width: 400px;
+            margin: 50px auto;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            background-color: #1e1e1e;
+            transition: background-color 0.3s, color 0.3s;
+        }
+            
+        .chatbox {
+            height: 300px;
+            overflow-y: auto;
+            border: 1px solid #666;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            background-color: #444;
+            transition: background-color 0.3s, color 0.3s;
+            position: relative;
+        }
+        
+        input[type="text"] {
+            width: calc(100% - 22px);
+            padding: 10px;
+            border: 1px solid #555;
+            border-radius: 5px;
+            background-color: #333;
+            color: #eaeaea;
+            margin-bottom: 10px;
+            transition: background-color 0.3s, color 0.3s;
+            position: relative;
+        }
+
+        input[type="text"]::placeholder {
+            color: #eaeaea;
+            opacity: 1; /* Firefox */
+            animation: movePlaceholder 2s infinite alternate;
+        }
+
+        @keyframes movePlaceholder {
+            0% {
+                transform: translateX(0);
+            }
+            100% {
+                transform: translateX(5px);
+            }
+        }
+
+        button {
+            width: 50%;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: #0078d4;
+            color: #ffffff;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+            display: block;
+            margin: 0 auto;
+        }
+
+        button:hover {
+            background-color: #005a9e;
+            transform: scale(1.05);
+        }
+
+        .message {
+            margin: 10px 0;
+            opacity: 0;
+            animation: fadeIn 0.5s forwards;
+        }
+
+        .user {
+            color: blue;
+            border: 1px solid gray;
+            border-radius: 7px;
+            padding: 5px;
+            background-color: #e0f7fa;
+            position: relative;
+            animation: slideIn 0.5s forwards;
+        }
+
+        .ai {
+            color: green;
+            border: 1px solid #333;
+            border-radius: 7px;
+            padding: 5px;
+            background-color: #e8f5e9;
+            position: relative;
+            animation: slideIn 0.5s forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        body.dark {
+            background: linear-gradient(to right, #ffffff, #b8b8b8);
+            color: #eaeaea;
+        }
+
+        .container.dark {
+            background-color: #ffffff;
+        }
+
+        .chatbox.dark {
+            background-color: #f0f0f0;
+            border: 1px solid #a4a4a4;
+        }
+
+        input[type="text"].dark {
+            border: 1px solid #444;
+            color: #333;
+            background-color: #ffffff;
+        }
+
+        button.dark {
+            background-color: #0078d4;
+        }
+
+        button.dark:hover {
+            background-color: #005a9e;
+        }
+
+        #themeToggle {
+            margin-bottom: 7px;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: #0078d4;
+            color: #ffffff;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+            display: block;
+            margin: 0 auto;
+            margin-bottom: 7px;
+        }
+
+        #themeToggle:hover {
+            background-color: #005a9e;
+            transform: scale(1.05);
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #0078d4;
+            animation: shake 0.5s infinite alternate;
+        }
+
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(5px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="container">
+        <h2>چت بات هوشمند</h2>
+        <button id="themeToggle">تغییر تم</button>
+        <div class="chatbox" id="messages"></div>
+        <input type="text" id="user_input" placeholder="سوال خود را بپرسید..." />
+        <button id="send_btn">ارسال</button>
+    </div>
+
+    <script>
+        document.getElementById('send_btn').onclick = function() {
+            var userInput = document.getElementById('user_input').value;
+            if (userInput) {
+                var messagesDiv = document.getElementById('messages');
+                messagesDiv.innerHTML += '<div class="message user">شما: ' + userInput + '</div>';
+                document.getElementById('user_input').value = '';
+
+                fetch('/ask', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: 'user_input=' + encodeURIComponent(userInput)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Create a new message element for AI response
+                    var aiMessage = document.createElement('div');
+                    aiMessage.className = 'message ai';
+                    aiMessage.style.opacity = 0; // Start with hidden text
+                    messagesDiv.appendChild(aiMessage);
+
+                    // Scroll to the bottom of the chatbox
+                    messagesDiv.scrollTop = messagesDiv.scrollHeight; // Scroll to the bottom
+
+                    // Use typeWriter function to display the AI response
+                    typeWriter(aiMessage, 'هوش مصنوعی: ' + data.response, 50); // 50 ms delay between letters
+                });
+            }
+        };
+
+        function typeWriter(element, text, delay) {
+            let index = 0;
+            function type() {
+                if (index < text.length) {
+                    element.innerHTML += text.charAt(index);
+                    index++;
+                    setTimeout(type, delay);
+                } else {
+                    element.style.opacity = 1; // Fade in effect after typing is done
+                }
+            }
+            type();
+        }
+
+        document.getElementById('themeToggle').onclick = function() {
+            document.body.classList.toggle('dark');
+            document.querySelector('.container').classList.toggle('dark');
+            document.querySelector('.chatbox').classList.toggle('dark');
+            document.querySelector('input[type="text"]').classList.toggle('dark');
+            document.querySelector('button').classList.toggle('dark');
+            document.getElementById('themeToggle').classList.toggle('dark');
+        };
+    </script>
+</body>
+</html>
